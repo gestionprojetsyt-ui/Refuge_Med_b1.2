@@ -9,16 +9,18 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. RÉCUPÉRATION DU LIEN SÉCURISÉ ---
-try:
-    URL_SHEET = st.secrets["gsheets"]["public_url"]
-except:
-    st.error("Lien de la base de données non configuré dans les Secrets Streamlit.")
-    st.stop()
+# --- 2. FONCTIONS TECHNIQUES (CACHE & URL) ---
 
-# --- 3. FONCTIONS TECHNIQUES ---
+# Cette fonction télécharge les données et les garde en mémoire (Cache)
+# C'est ce qui rend le changement de filtre instantané.
+@st.cache_data(ttl=3600)  # Garde en mémoire pendant 1 heure
+def load_all_data(url):
+    # Transformation du lien Google Sheet en lien de téléchargement CSV
+    csv_url = url.replace('/edit?usp=sharing', '/export?format=csv').replace('/edit#gid=', '/export?format=csv&gid=')
+    # Lecture directe avec le moteur le plus rapide
+    return pd.read_csv(csv_url, engine='c', low_memory=False)
 
-# Convertit les liens Google Drive en images directes
+# Transformation des liens Google Drive en images affichables
 def format_image_url(url):
     url = str(url).strip()
     if "drive.google.com" in url:
@@ -28,49 +30,44 @@ def format_image_url(url):
             return f"https://drive.google.com/uc?export=view&id={id_photo}"
     return url
 
-# Prépare l'URL du Google Sheet pour la lecture
-def get_csv_url(url):
-    if "docs.google.com" in url:
-        return url.replace('/edit?usp=sharing', '/export?format=csv').replace('/edit#gid=', '/export?format=csv&gid=')
-    return url
-
-# SYSTÈME DE CACHE : Pour que les filtres soient instantanés
-@st.cache_data(ttl=600)
-def load_data(url):
-    return pd.read_csv(url)
-
-# --- 4. STYLE CSS ---
+# --- 3. STYLE VISUEL (CSS) ---
 st.markdown("""
     <style>
-    [data-testid="stImage"] img { border-radius: 15px; object-fit: cover; }
+    [data-testid="stImage"] img { border-radius: 15px; object-fit: cover; height: 250px; }
     .footer { text-align: center; color: #888; font-size: 0.85em; margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px; }
+    .stButton>button { width: 100%; border-radius: 20px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. CHARGEMENT ET AFFICHAGE ---
+# --- 4. CHARGEMENT ET INTERFACE ---
 try:
-    # On affiche un petit message discret pendant que les données chargent
-    with st.spinner('Mise à jour du catalogue...'):
-        df = load_data(get_csv_url(URL_SHEET))
+    # Récupération sécurisée du lien
+    URL_SHEET = st.secrets["gsheets"]["public_url"]
     
+    # Chargement des données (Utilise le cache pour la vitesse)
+    df = load_all_data(URL_SHEET)
+
     st.title("🐾 Refuge Médérique")
-    st.markdown("### Association Animaux du Grand Dax")
+    st.markdown("#### Association Animaux du Grand Dax")
 
     if not df.empty:
-        # Barre de sélection (instantanée grâce au cache)
+        # Filtre par espèce (Devient instantané avec le cache)
         liste_especes = ["Tous"] + sorted(df['Espèce'].dropna().unique().tolist())
-        espece_choisie = st.selectbox("Quel animal recherchez-vous ?", liste_especes)
+        choix = st.selectbox("Quel animal recherchez-vous ?", liste_especes)
         
-        df_filtre = df[df['Espèce'] == espece_choisie] if espece_choisie != "Tous" else df
-        st.write(f"Il y a **{len(df_filtre)}** protégés qui attendent une famille.")
+        # Filtrage local (très rapide)
+        df_filtre = df[df['Espèce'] == choix] if choix != "Tous" else df
+        
+        st.write(f"Il y a actuellement **{len(df_filtre)}** protégés à l'adoption.")
         st.markdown("---")
 
-        # --- BOUCLE D'AFFICHAGE ---
+        # --- BOUCLE D'AFFICHAGE DES FICHES ---
         for _, row in df_filtre.iterrows():
             with st.container(border=True):
                 col1, col2 = st.columns([1.5, 2])
                 
                 with col1:
+                    # Gestion de la photo
                     url_photo = format_image_url(row['Photo'])
                     if url_photo.startswith('http'):
                         st.image(url_photo, use_container_width=True)
@@ -80,35 +77,39 @@ try:
                 with col2:
                     st.header(row['Nom'])
                     
-                    # Statut visuel
+                    # Statut (Couleurs)
                     statut = str(row['Statut'])
                     if "Adopté" in statut: st.success(f"✅ {statut}")
                     elif "Urgence" in statut: st.error(f"🚨 {statut}")
                     else: st.warning(f"🏠 {statut}")
 
-                    # Carte d'identité
+                    # Infos clés
                     st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
                     
-                    # DATE D'ARRIVÉE (Placée ici comme demandé)
+                    # DATE D'ARRIVÉE (Juste sous l'âge)
                     st.markdown(f"📅 **Arrivé le :** {row['Date_Entree']}")
                     
                     st.write(f"**Description :** {row['Description']}")
                     
-                    # Histoire détaillée
-                    with st.expander("En savoir plus sur son parcours"):
+                    with st.expander("En savoir plus sur son histoire"):
                         st.write(row['Histoire'])
 
-    else:
-        st.info("Le catalogue est vide pour le moment.")
-
-    # --- PIED DE PAGE ---
-    st.markdown(f'''
-        <div class="footer">
-            © 2026 - Application officielle du Refuge Médérique<br>
-            <b>Association Animaux du Grand Dax</b><br>
-            Développé par Firnaeth. avec passion pour nos amis à quatre pattes
-        </div>
-    ''', unsafe_allow_html=True)
+    # --- PIED DE PAGE ET BOUTON DE MISE À JOUR ---
+    st.markdown("---")
+    col_btn, col_txt = st.columns([1, 2])
+    with col_btn:
+        # Bouton pour vider le cache et recharger si elles modifient le Excel
+        if st.button("🔄 Actualiser le catalogue"):
+            st.cache_data.clear()
+            st.rerun()
+            
+    with col_txt:
+        st.markdown(f'''
+            <div class="footer">
+                © 2026 - Refuge Médérique<br>
+                <b>Grand Dax</b>
+            </div>
+        ''', unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Erreur lors de la récupération des données. Vérifiez votre connexion.")
+    st.error("Connexion à la base de données impossible. Vérifiez le lien dans les Secrets.")
