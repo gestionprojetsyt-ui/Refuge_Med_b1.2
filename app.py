@@ -5,7 +5,7 @@ import pandas as pd
 st.set_page_config(page_title="Refuge de Douai", layout="centered")
 
 # Lien vers ton Google Sheets (le lien .csv copié à l'étape 2)
-URL_DONNEES = "TON_LIEN_ICI"
+URL_DONNEES = "https://docs.google.com/spreadsheets/d/1XZXKwCfJ_922HAkAANzpXyyZL97uJzcu84viFWdtgpA/edit?usp=sharing"
 
 # Chargement des données
 @st.cache_data
