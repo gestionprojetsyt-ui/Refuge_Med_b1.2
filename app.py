@@ -7,7 +7,7 @@ st.set_page_config(page_title="Refuge Médéric (Association Animaux du Grand Da
 
 # --- 2. LIEN GOOGLE SHEET ---
 # Remplace par ton lien de partage (bouton Partager -> Tous les utilisateurs disposant du lien)
-URL_SHEET = "https://docs.google.com/spreadsheets/d/1XZXKwCfJ_922HAkAANzpXyyZL97uJzcu84viFWdtgpA/edit?gid=1314662901#gid=1314662901"
+URL_SHEET = "https://docs.google.com/spreadsheets/d/1XZXKwCfJ_922HAkAANzpXyyZL97uJzcu84viFWdtgpA/edit?usp=sharing"
 
 def get_csv_url(url):
     if "docs.google.com" in url:
