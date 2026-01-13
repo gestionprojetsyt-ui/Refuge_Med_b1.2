@@ -3,7 +3,7 @@ import pandas as pd
 import re
 
 # --- 1. CONFIGURATION DE LA PAGE ---
-st.set_page_config(page_title="Refuge Médérique", layout="centered", page_icon="🐾")
+st.set_page_config(page_title="Refuge Médérique (Association Animaux du Grand Dax)", layout="centered", page_icon="🐾")
 
 # --- 2. RÉCUPÉRATION DU LIEN SÉCURISÉ ---
 try:
@@ -86,7 +86,7 @@ try:
         <div class="footer">
             © 2026 - Application officielle du Refuge Médérique<br>
             <b>Association Animaux du Grand Dax</b><br>
-            Développé par Ton Nom
+            Développé par Firnaeth.
         </div>
     ''', unsafe_allow_html=True)
 
