@@ -34,36 +34,35 @@ def get_csv_url(url):
         return url.replace('/edit?usp=sharing', '/export?format=csv').replace('/edit#gid=', '/export?format=csv&gid=')
     return url
 
-# SYSTÈME DE CACHE : Télécharge les données une fois et les garde 10 min en mémoire
-# Cela rend les filtres instantanés pour vos 60 animaux.
+# SYSTÈME DE CACHE : Pour que les filtres soient instantanés
 @st.cache_data(ttl=600)
 def load_data(url):
     return pd.read_csv(url)
 
-# --- 4. STYLE CSS PERSONNALISÉ ---
+# --- 4. STYLE CSS ---
 st.markdown("""
     <style>
     [data-testid="stImage"] img { border-radius: 15px; object-fit: cover; }
     .footer { text-align: center; color: #888; font-size: 0.85em; margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px; }
-    .stHeader { color: #2c3e50; }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 5. CHARGEMENT ET AFFICHAGE ---
 try:
-    # On utilise la fonction avec cache ici
-    df = load_data(get_csv_url(URL_SHEET))
+    # On affiche un petit message discret pendant que les données chargent
+    with st.spinner('Mise à jour du catalogue...'):
+        df = load_data(get_csv_url(URL_SHEET))
     
     st.title("🐾 Refuge Médérique")
     st.markdown("### Association Animaux du Grand Dax")
 
     if not df.empty:
-        # Barre de sélection (devenue ultra-rapide grâce au cache)
+        # Barre de sélection (instantanée grâce au cache)
         liste_especes = ["Tous"] + sorted(df['Espèce'].dropna().unique().tolist())
         espece_choisie = st.selectbox("Quel animal recherchez-vous ?", liste_especes)
         
         df_filtre = df[df['Espèce'] == espece_choisie] if espece_choisie != "Tous" else df
-        st.info(f"Nous avons actuellement **{len(df_filtre)}** protégés à vous présenter.")
+        st.write(f"Il y a **{len(df_filtre)}** protégés qui attendent une famille.")
         st.markdown("---")
 
         # --- BOUCLE D'AFFICHAGE ---
@@ -72,7 +71,6 @@ try:
                 col1, col2 = st.columns([1.5, 2])
                 
                 with col1:
-                    # Photo optimisée
                     url_photo = format_image_url(row['Photo'])
                     if url_photo.startswith('http'):
                         st.image(url_photo, use_container_width=True)
@@ -90,6 +88,8 @@ try:
 
                     # Carte d'identité
                     st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
+                    
+                    # DATE D'ARRIVÉE (Placée ici comme demandé)
                     st.markdown(f"📅 **Arrivé le :** {row['Date_Entree']}")
                     
                     st.write(f"**Description :** {row['Description']}")
@@ -99,19 +99,16 @@ try:
                         st.write(row['Histoire'])
 
     else:
-        st.warning("Le catalogue est actuellement en cours de mise à jour.")
+        st.info("Le catalogue est vide pour le moment.")
 
     # --- PIED DE PAGE ---
     st.markdown(f'''
         <div class="footer">
             © 2026 - Application officielle du Refuge Médérique<br>
             <b>Association Animaux du Grand Dax</b><br>
-            Développé par [Firnaeth.]
+            Développé par Firnaeth. avec passion pour nos amis à quatre pattes
         </div>
     ''', unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Connexion impossible au catalogue. Veuillez vérifier votre connexion internet.")
-
-except Exception as e:
-    st.error("Erreur de connexion aux données.")
+    st.error("Erreur lors de la récupération des données. Vérifiez votre connexion.")
