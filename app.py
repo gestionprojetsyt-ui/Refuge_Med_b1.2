@@ -110,12 +110,14 @@ try:
                     st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
                     st.markdown(f"📅 **Arrivé le :** {row['Date_Entree']}")
                     
-                    with st.expander("📖 Sa personnalité et son vécu"):
-                        st.markdown("### 🐾 Caractère")
-                        st.write(row['Description'])
-                        st.write("---")
-                        st.markdown("### 📜 Son Histoire")
+                    # --- SYSTÈME D'ONGLETS ---
+                    tab_histoire, tab_caractere = st.tabs(["📖 Histoire", "📋 Caractère"])
+                    
+                    with tab_histoire:
                         st.write(row['Histoire'])
+                        
+                    with tab_caractere:
+                        st.write(row['Description'])
                         
                     st.markdown(f"""<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption de {row['Nom']}" class="contact-link">📩 Contacter pour {row['Nom']}</a>""", unsafe_allow_html=True)
 
