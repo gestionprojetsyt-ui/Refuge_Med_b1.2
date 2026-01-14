@@ -54,7 +54,7 @@ try:
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
 
-    st.title("🐾 Refuge Médérique")
+    st.title("🐾 Refuge Médéric")
     st.markdown("#### Association Animaux du Grand Dax")
 
     if not df.empty:
