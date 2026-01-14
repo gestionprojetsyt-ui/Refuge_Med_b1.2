@@ -121,7 +121,7 @@ try:
             <div class="footer-info">
                 <b>Refuge Médéric - Association Animaux du Grand Dax</b><br>
                 182 chemin Lucien Viau, 40990 St-Paul-lès-Dax<br>
-                📞 05 58 73 68 82 | ⏰ 14h00 - 18h00 (Mercredi-Dimanche)
+                📞 05 58 73 68 82 | ⏰ 14h00 - 18h00 (Mercredi au Dimanche)
             </div>
             <div class="copyright">
                  © 2026 - Application officielle du Refuge Médéric<br>
