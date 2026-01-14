@@ -107,15 +107,15 @@ try:
                     st.write(f"**Description :** {row['Description']}")
                     with st.expander("Son histoire"):
                         st.write(row['Histoire'])
-
-    # --- PIED DE PAGE ---
-   st.markdown(f'''
+# --- PIED DE PAGE ---
+    st.markdown(f'''
        <div class="footer">
-            © 2026 - Application officielle du Refuge Médéric<br>
+            © 2026 - Application officielle du Refuge Médérique<br>
             <b>Association Animaux du Grand Dax</b><br>
             Développé par Firnaeth. avec passion pour nos amis à quatre pattes
         </div>
     ''', unsafe_allow_html=True)
+   
 
 except Exception as e:
     st.error(f"Erreur de connexion : {e}")
