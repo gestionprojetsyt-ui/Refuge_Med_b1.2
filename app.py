@@ -43,7 +43,8 @@ st.markdown("""
     [data-testid="stImage"] img { border-radius: 15px; object-fit: cover; height: 280px; }
     .stButton>button { width: 100%; border-radius: 10px; background-color: #f0f2f6; color: #31333F; border: 1px solid #dcdfe3; }
     
-    .contact-link { text-decoration: none; color: white !important; background-color: #28a745; padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 15px; }
+    .contact-link { text-decoration: none; color: white !important; background-color: #28a745; padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px; }
+    .tel-link { text-decoration: none; color: white !important; background-color: #2e7d32; padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 15px; }
     
     .footer-container {
         background-color: #f8f9fa;
@@ -110,8 +111,10 @@ try:
                     tab_histoire, tab_caractere = st.tabs(["📖 Histoire", "📋 Caractère"])
                     with tab_histoire: st.write(row['Histoire'])
                     with tab_caractere: st.write(row['Description'])
-                        
-                    st.markdown(f"""<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption de {row['Nom']}" class="contact-link">📩 Contacter pour {row['Nom']}</a>""", unsafe_allow_html=True)
+                    
+                    # --- BOUTONS DE CONTACT ---
+                    st.markdown(f"""<a href="tel:0558736882" class="tel-link">📞 Appeler le refuge</a>""", unsafe_allow_html=True)
+                    st.markdown(f"""<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption de {row['Nom']}" class="contact-link">📩 Envoyer un mail pour {row['Nom']}</a>""", unsafe_allow_html=True)
 
     # --- 5. PIED DE PAGE ---
     st.markdown("""
@@ -128,6 +131,5 @@ try:
             </div>
         </div>
     """, unsafe_allow_html=True)
-
 except Exception as e:
-    st.error("Erreur de connexion aux données.")
+    st.error(f"Erreur lors du chargement des données : {e}")
