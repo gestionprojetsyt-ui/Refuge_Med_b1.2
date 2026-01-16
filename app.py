@@ -81,7 +81,7 @@ st.markdown("""
 # --- 4. CHARGEMENT ET INTERFACE ---
 
 # Remplace par ton lien Google Sheets définitif
-URL_SHEET = "TON_LIEN_GOOGLE_SHEETS_ICI"
+URL_SHEET = "https://docs.google.com/spreadsheets/d/1XZXKwCfJ_922HAkAANzpXyyZL97uJzcu84viFWdtgpA/edit?usp=sharing"
 
 df = load_all_data(URL_SHEET)
 
