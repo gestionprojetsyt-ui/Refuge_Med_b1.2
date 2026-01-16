@@ -11,7 +11,7 @@ st.set_page_config(
 
 # --- 2. FONCTIONS TECHNIQUES ---
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def load_all_data(url):
     csv_url = url.replace('/edit?usp=sharing', '/export?format=csv').replace('/edit#gid=', '/export?format=csv&gid=')
     df = pd.read_csv(csv_url, engine='c', low_memory=False)
