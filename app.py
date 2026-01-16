@@ -43,8 +43,21 @@ st.markdown("""
     [data-testid="stImage"] img { border-radius: 15px; object-fit: cover; height: 280px; }
     .stButton>button { width: 100%; border-radius: 10px; background-color: #f0f2f6; color: #31333F; border: 1px solid #dcdfe3; }
     
-    .contact-link { text-decoration: none; color: white !important; background-color: #28a745; padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px; }
-    .tel-link { text-decoration: none; color: white !important; background-color: #2e7d32; padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 15px; }
+    /* Style unique pour les deux boutons de contact */
+    .contact-button { 
+        text-decoration: none !important; 
+        color: white !important; 
+        background-color: #2e7d32; 
+        padding: 12px; 
+        border-radius: 8px; 
+        display: block; 
+        text-align: center; 
+        font-weight: bold; 
+        margin-top: 10px;
+    }
+    .contact-button:hover {
+        background-color: #1b5e20;
+    }
     
     .footer-container {
         background-color: #f8f9fa;
@@ -81,8 +94,7 @@ try:
             st.cache_data.clear()
             st.rerun()
 
-        # --- AJOUT DU DISCLAIMER ---
-        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ du refuge pour une adoption responsable.")
+        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ du refuge.")
         
         df_filtre = df.copy()
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
@@ -112,9 +124,9 @@ try:
                     with tab_histoire: st.write(row['Histoire'])
                     with tab_caractere: st.write(row['Description'])
                     
-                    # --- BOUTONS DE CONTACT ---
-                    st.markdown(f"""<a href="tel:0558736882" class="tel-link">📞 Appeler le refuge</a>""", unsafe_allow_html=True)
-                    st.markdown(f"""<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption de {row['Nom']}" class="contact-link">📩 Envoyer un mail pour {row['Nom']}</a>""", unsafe_allow_html=True)
+                    # --- BOUTONS DE CONTACT HARMONISÉS ---
+                    st.markdown(f"""<a href="tel:0558736882" class="contact-button">📞 Appeler le refuge</a>""", unsafe_allow_html=True)
+                    st.markdown(f"""<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption de {row['Nom']}" class="contact-button">📩 Envoyer un mail pour {row['Nom']}</a>""", unsafe_allow_html=True)
 
     # --- 5. PIED DE PAGE ---
     st.markdown("""
