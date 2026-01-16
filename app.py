@@ -95,7 +95,7 @@ if not df.empty:
         st.cache_data.clear()
         st.rerun()
 
-    st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** et **stérilisés** avant leur départ.")
+    st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ du refuge pour une adoption responsable.")
     
     df_filtre = df.copy()
     if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
