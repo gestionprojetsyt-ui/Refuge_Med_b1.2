@@ -40,10 +40,10 @@ def format_image_url(url):
             return f"https://drive.google.com/uc?export=view&id={id_photo}"
     return url
 
-# --- 3. STYLE VISUEL (CHARTE ROUGE & BLANC) ---
+# --- 3. STYLE VISUEL (CHARTE ROUGE & BOUTONS VERTS) ---
 st.markdown("""
     <style>
-    /* TITRE EN ROUGE */
+    /* TITRE EN ROUGE (Charte) */
     h1 { color: #FF0000 !important; }
     
     /* EFFET POLAROID (BORD BLANC) */
@@ -55,22 +55,22 @@ st.markdown("""
         height: 320px;
     }
     
-    /* BOUTONS CONTACT ROUGE (Charte graphique) */
+    /* RETOUR AU VERT POUR LES BOUTONS CONTACT */
     .btn-contact { 
-        text-decoration: none !important; color: white !important; background-color: #FF0000; 
+        text-decoration: none !important; color: white !important; background-color: #2e7d32; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
     }
     
-    /* BOUTON RÉSERVÉ (Orange pour différencier) */
+    /* BOUTON RÉSERVÉ ORANGE */
     .btn-reserve { 
         text-decoration: none !important; color: white !important; background-color: #ff8f00; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
     }
 
-    /* PIED DE PAGE AVEC RAPPEL ROUGE */
+    /* PIED DE PAGE AVEC CADRE ROUGE */
     .footer-container {
         background-color: white;
-        padding: 30px;
+        padding: 25px;
         border-radius: 15px;
         margin-top: 50px;
         text-align: center;
@@ -103,10 +103,9 @@ try:
             st.cache_data.clear()
             st.rerun()
 
-        # Engagement Santé
+        # Engagement Santé bien visible
         st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** et **stérilisés**.")
         
-        # Filtrage
         df_filtre = df_dispo.copy()
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
         if choix_age != "Tous": df_filtre = df_filtre[df_filtre['Tranche_Age'] == choix_age]
@@ -139,7 +138,7 @@ try:
                     if "Réservé" in statut:
                         st.markdown(f"""<div class="btn-reserve">🧡 Animal déjà réservé</div>""", unsafe_allow_html=True)
                     else:
-                        # BOUTONS PASSÉS EN ROUGE
+                        # RETOUR AU VERT ICI
                         st.markdown(f"""<a href="tel:0558736882" class="btn-contact">📞 Appeler le refuge</a>""", unsafe_allow_html=True)
                         st.markdown(f"""<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption de {row['Nom']}" class="btn-contact">📩 Envoyer un Mail</a>""", unsafe_allow_html=True)
 
@@ -159,4 +158,4 @@ try:
     """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Configuration nécessaire : Vérifiez 'public_url' dans les Secrets.")
+    st.error("Lien 'public_url' manquant dans les Secrets.")
