@@ -11,7 +11,7 @@ st.set_page_config(
 
 # --- 2. FONCTIONS TECHNIQUES ---
 
-@st.cache_data(ttl=60) # Rafraîchissement rapide (1 min)
+@st.cache_data(ttl=60)
 def load_all_data(url):
     try:
         csv_url = url.replace('/edit?usp=sharing', '/export?format=csv').replace('/edit#gid=', '/export?format=csv&gid=')
@@ -44,31 +44,42 @@ def format_image_url(url):
 # --- 3. STYLE VISUEL (CSS) ---
 st.markdown("""
     <style>
-    /* Design des images */
-    [data-testid="stImage"] img { border-radius: 15px; object-fit: cover; height: 280px; }
+    /* Bordure des photos en blanc avec ombre pour l'effet relief */
+    [data-testid="stImage"] img { 
+        border: 5px solid white; 
+        border-radius: 15px; 
+        object-fit: cover; 
+        height: 280px;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+    }
     
-    /* Boutons standards */
+    /* Style des fiches animaux avec bordure rouge */
+    [data-testid="stVerticalBlockBordered"] {
+        border: 2px solid #e53935 !important;
+        border-radius: 15px !important;
+        background-color: white !important;
+    }
+
     .stButton>button { width: 100%; border-radius: 10px; }
     
-    /* Bouton Contact (Vert) */
+    /* Boutons de contact */
     .contact-button { 
         text-decoration: none !important; color: white !important; background-color: #2e7d32; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
     }
     
-    /* Bouton Réservé (Orange Ambre) */
     .reserve-button { 
         text-decoration: none !important; color: white !important; background-color: #ff8f00; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
     }
 
-    /* Encart Pied de page */
+    /* Encart Pied de page avec bordure rouge */
     .footer-container {
         background-color: #f8f9fa;
         padding: 25px;
         border-radius: 15px;
         margin-top: 50px;
-        border: 1px solid #eee;
+        border: 2px solid #e53935;
         text-align: center;
     }
     .footer-info { color: #444; font-size: 0.9em; line-height: 1.6; }
@@ -79,12 +90,12 @@ st.markdown("""
 # --- 4. CHARGEMENT ET INTERFACE ---
 
 try:
-    # Retour au mode SECRET
+    # Récupération sécurisée via les Secrets
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
 
     if not df.empty:
-        # CONDITION : Supprimer immédiatement les animaux adoptés de l'affichage
+        # Suppression automatique des animaux adoptés
         df_dispo = df[df['Statut'] != "Adopté"].copy()
 
         st.title("🐾 Refuge Médéric")
@@ -121,8 +132,6 @@ try:
                     st.header(row['Nom'])
                     
                     statut = str(row['Statut']).strip()
-                    
-                    # Affichage visuel du statut
                     if "Urgence" in statut: st.error(f"🚨 {statut}")
                     elif "Réservé" in statut: st.warning(f"🟠 {statut}")
                     else: st.info(f"🏠 {statut}")
@@ -133,7 +142,6 @@ try:
                     with tab_histoire: st.write(row['Histoire'])
                     with tab_caractere: st.write(row['Description'])
                     
-                    # Logique des boutons
                     if "Réservé" in statut:
                         st.markdown(f"""<div class="reserve-button">🧡 Animal déjà réservé</div>""", unsafe_allow_html=True)
                     else:
@@ -157,4 +165,4 @@ try:
     """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("L'application est en maintenance (Lien Secret non configuré).")
+    st.error("L'application est en maintenance (Configuration des Secrets requise).")
