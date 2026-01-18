@@ -29,7 +29,7 @@ def load_all_data(url):
         df['Tranche_Age'] = df['Âge'].apply(categoriser_age)
         return df
     except Exception as e:
-        st.error("Erreur de connexion aux données.")
+        st.error("Connexion aux données en cours...")
         return pd.DataFrame()
 
 def format_image_url(url):
@@ -44,25 +44,28 @@ def format_image_url(url):
 # --- 3. STYLE VISUEL (CSS) ---
 st.markdown("""
     <style>
-    /* Bordure des photos en blanc avec ombre pour l'effet relief */
+    /* 1. Bordure des photos en blanc (effet Polaroid) */
     [data-testid="stImage"] img { 
-        border: 5px solid white; 
-        border-radius: 15px; 
+        border: 6px solid white !important; 
+        border-radius: 15px !important; 
         object-fit: cover; 
-        height: 280px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        height: 300px;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.3) !important;
     }
     
-    /* Style des fiches animaux avec bordure rouge */
-    [data-testid="stVerticalBlockBordered"] {
-        border: 2px solid #e53935 !important;
-        border-radius: 15px !important;
-        background-color: white !important;
+    /* 2. Forcer le CADRE ROUGE sur les fiches animaux */
+    div[data-testid="stVerticalBlockBordered"] {
+        border: 3px solid #FF0000 !important;
+        border-radius: 20px !important;
+        background-color: #FFFFFF !important;
+        padding: 25px !important;
+        margin-bottom: 20px !important;
+        box-shadow: 3px 3px 10px rgba(0,0,0,0.1) !important;
     }
 
+    /* 3. Boutons et Interface */
     .stButton>button { width: 100%; border-radius: 10px; }
     
-    /* Boutons de contact */
     .contact-button { 
         text-decoration: none !important; color: white !important; background-color: #2e7d32; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
@@ -73,29 +76,29 @@ st.markdown("""
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
     }
 
-    /* Encart Pied de page avec bordure rouge */
+    /* 4. Encart Pied de page avec CADRE ROUGE */
     .footer-container {
         background-color: #f8f9fa;
         padding: 25px;
         border-radius: 15px;
         margin-top: 50px;
-        border: 2px solid #e53935;
+        border: 3px solid #FF0000;
         text-align: center;
     }
-    .footer-info { color: #444; font-size: 0.9em; line-height: 1.6; }
-    .copyright { font-size: 0.8em; color: #888; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0; }
+    .footer-info { color: #222; font-size: 0.95em; line-height: 1.6; }
+    .copyright { font-size: 0.85em; color: #666; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 4. CHARGEMENT ET INTERFACE ---
 
 try:
-    # Récupération sécurisée via les Secrets
+    # Récupération du lien via Secrets
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
 
     if not df.empty:
-        # Suppression automatique des animaux adoptés
+        # CONDITION : Supprimer immédiatement les animaux adoptés
         df_dispo = df[df['Statut'] != "Adopté"].copy()
 
         st.title("🐾 Refuge Médéric")
@@ -113,7 +116,7 @@ try:
             st.cache_data.clear()
             st.rerun()
 
-        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés** et **identifiés** (puce électronique) avant leur départ du refuge pour une adoption responsable.")
+        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** et **stérilisés**.")
         
         df_filtre = df_dispo.copy()
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
@@ -122,7 +125,9 @@ try:
         st.write(f"**{len(df_filtre)}** protégé(s) à l'adoption")
         st.markdown("---")
 
+        # --- BOUCLE DES FICHES ---
         for _, row in df_filtre.iterrows():
+            # Le cadre rouge s'applique ici grâce au CSS sur st.container(border=True)
             with st.container(border=True):
                 c1, c2 = st.columns([1.5, 2])
                 with c1:
@@ -152,12 +157,12 @@ try:
     st.markdown("""
         <div class="footer-container">
             <div class="footer-info">
-                <b>Refuge Médéric - Association Animaux du Grand Dax</b><br>
+                <b>Refuge Médérique - Association Animaux du Grand Dax</b><br>
                 182 chemin Lucien Viau, 40990 St-Paul-lès-Dax<br>
                 📞 05 58 73 68 82 | ⏰ 14h00 - 18h00 (Mercredi au Dimanche)
             </div>
             <div class="copyright">
-                 © 2026 - Application officielle du Refuge Médéric<br>
+                 © 2026 - Application officielle du Refuge Médérique<br>
                 <b>Association Animaux du Grand Dax</b><br>
                 Développé par Firnaeth. avec passion pour nos amis à quatre pattes
             </div>
@@ -165,4 +170,4 @@ try:
     """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("L'application est en maintenance (Configuration des Secrets requise).")
+    st.warning("Configuration en cours : Veuillez vérifier vos 'Secrets' Streamlit.")
