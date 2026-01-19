@@ -13,7 +13,7 @@ st.set_page_config(
 
 # --- 2. CONFIGURATION DU LOGO (TON LIEN CORRIGÉ) ---
 # J'ai transformé ton lien en lien direct "uc?export=view"
-URL_LOGO_HD = "https://drive.google.com/uc?export=view&id=1-xx9Lw9fbw1ILGKgWEkhXfOfrsGhTcum" 
+URL_LOGO_HD = "https://drive.google.com/file/d/1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E/view" 
 
 @st.cache_data
 def get_base64_image(url):
