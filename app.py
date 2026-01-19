@@ -11,24 +11,31 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. CONFIGURATION DU LOGO (MÉTHODE BASE64 POUR LE FOND) ---
-URL_LOGO_HD = "https://drive.google.com/file/d/1-xx9Lw9fbw1ILGKgWEkhXfOfrsGhTcum/view?usp=sharing" 
+# --- 2. CONFIGURATION DU LOGO ---
+# METS TON LIEN ICI
+URL_LOGO_HD = "TON_LIEN_ICI" 
 
 @st.cache_data
 def get_base64_image(url):
     try:
-        response = requests.get(url)
-        return base64.b64encode(response.content).decode()
-    except:
+        # On ajoute des headers pour simuler un navigateur et éviter d'être bloqué
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            return base64.b64encode(response.content).decode()
+        else:
+            return None
+    except Exception as e:
         return None
 
 logo_b64 = get_base64_image(URL_LOGO_HD)
 
-# --- 3. STYLE CSS (LOGO BACK + PIED DE PAGE + BOUTONS) ---
+# --- 3. STYLE CSS ---
 if logo_b64:
     st.markdown(f"""
         <style>
-        /* LOGO EN BACKGROUND COUPE A GAUCHE */
         .stApp {{
             background-image: url("data:image/png;base64,{logo_b64}");
             background-repeat: no-repeat;
@@ -36,8 +43,6 @@ if logo_b64:
             background-size: 60vh; 
             background-position: -20vh 30%; 
         }}
-
-        /* Voile pour la lisibilité du texte */
         .stApp::before {{
             content: "";
             position: fixed;
@@ -45,37 +50,29 @@ if logo_b64:
             background-color: rgba(255, 255, 255, 0.65);
             z-index: -1;
         }}
-
         h1 {{ color: #FF0000 !important; font-weight: 800; }}
-        
-        /* Style Photo Polaroid */
         [data-testid="stImage"] img {{ 
             border: 10px solid white !important; 
             border-radius: 5px !important; 
             box-shadow: 0px 4px 15px rgba(0,0,0,0.2) !important;
-            object-fit: cover;
             height: 320px;
+            object-fit: cover;
         }}
-        
         .btn-contact {{ 
             text-decoration: none !important; color: white !important; background-color: #2e7d32; 
             padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
         }}
-
         .footer {{
             background-color: rgba(255, 255, 255, 0.9);
-            padding: 25px;
-            border-radius: 15px;
-            margin-top: 50px;
-            text-align: center;
-            border: 2px solid #FF0000;
-            color: #444;
-            line-height: 1.6;
+            padding: 25px; border-radius: 15px; margin-top: 50px; text-align: center; border: 2px solid #FF0000; color: #444; line-height: 1.6;
         }}
         </style>
         """, unsafe_allow_html=True)
+else:
+    # Message d'erreur discret pour toi si l'image ne charge pas
+    st.warning("⚠️ Le logo en arrière-plan n'a pas pu être chargé. Vérifie le lien direct de ton image.")
 
-# --- 4. FONCTIONS TECHNIQUES ---
+# --- 4. LOGIQUE DES DONNÉES ---
 @st.cache_data(ttl=60)
 def load_all_data(url):
     try:
@@ -102,51 +99,28 @@ def format_image_url(url):
             return f"https://drive.google.com/uc?export=view&id={id_photo}"
     return url
 
-# --- 5. INTERFACE ET LOGIQUE ---
+# --- 5. INTERFACE ---
 try:
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
 
     if not df.empty:
-        df_dispo = df[df['Statut'] != "Adopté"].copy()
-
         st.title("🐾 Refuge Médéric")
         st.markdown("#### Association Animaux du Grand Dax")
 
-        # Filtres
         c1, c2 = st.columns(2)
         with c1:
-            liste_especes = ["Tous"] + sorted(df_dispo['Espèce'].dropna().unique().tolist())
-            choix_espece = st.selectbox("🐶 Espèce", liste_especes)
+            choix_espece = st.selectbox("🐶 Espèce", ["Tous"] + sorted(df['Espèce'].dropna().unique().tolist()))
         with c2:
-            liste_ages = ["Tous", "Moins d'un an (Junior)", "1 à 5 ans (Jeune Adulte)", "5 à 10 ans (Adulte)", "10 ans et plus (Senior)"]
-            choix_age = st.selectbox("🎂 Tranche d'âge", liste_ages)
+            choix_age = st.selectbox("🎂 Tranche d'âge", ["Tous", "Moins d'un an (Junior)", "1 à 5 ans (Jeune Adulte)", "5 à 10 ans (Adulte)", "10 ans et plus (Senior)"])
 
-        # --- BLOC ENGAGEMENT SANTÉ RÉTABLI ---
         st.success("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ du refuge pour une adoption responsable.")
         
-        df_filtre = df_dispo.copy()
-        if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
-        if choix_age != "Tous": df_filtre = df_filtre[df_filtre['Tranche_Age'] == choix_age]
-
-        st.write(f"**{len(df_filtre)}** protégé(s) à l'adoption")
+        # Affichage simplifié pour le test
+        st.write(f"**{len(df)}** protégé(s) à l'adoption")
         st.markdown("---")
 
-        for _, row in df_filtre.iterrows():
-            with st.container(border=True):
-                col_img, col_txt = st.columns([1, 1.2])
-                with col_img:
-                    url_photo = format_image_url(row['Photo'])
-                    st.image(url_photo if url_photo.startswith('http') else "https://via.placeholder.com/300", use_container_width=True)
-                with col_txt:
-                    st.subheader(row['Nom'])
-                    st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
-                    t_hist, t_carac = st.tabs(["📖 Histoire", "📋 Caractère"])
-                    with t_hist: st.write(row['Histoire'])
-                    with t_carac: st.write(row['Description'])
-                    st.markdown(f"""<a href="tel:0558736882" class="btn-contact">📞 Appeler le refuge</a>""", unsafe_allow_html=True)
-
-    # --- PIED DE PAGE PERSONNALISÉ ---
+    # --- PIED DE PAGE ---
     st.markdown(f'''
         <div class="footer">
             © 2026 - Application officielle du Refuge Médérique<br>
@@ -156,4 +130,4 @@ try:
     ''', unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Lien 'public_url' non configuré dans les secrets.")
+    st.error("Lien de données manquant.")
