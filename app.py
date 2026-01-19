@@ -6,7 +6,7 @@ import re
 st.set_page_config(
     page_title="Refuge Médéric - Association Animaux du Grand Dax", 
     layout="centered", 
-    page_icon="https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E"
+    page_icon="🐾"
 )
 
 # --- 2. FONCTIONS TECHNIQUES ---
