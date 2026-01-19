@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 import re
-import requests
-import base64
 
 # --- 1. CONFIGURATION DE LA PAGE ---
 st.set_page_config(
@@ -11,48 +9,30 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. RÉCUPÉRATION DU LOGO ---
-URL_LOGO_HD = "https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E" 
-
-@st.cache_data
-def get_base64_image(url):
-    try:
-        # On ajoute un timeout et un header pour éviter les blocages
-        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-        if response.status_code == 200:
-            return base64.b64encode(response.content).decode()
-    except:
-        return None
-    return None
-
-logo_b64 = get_base64_image(URL_LOGO_HD)
-
-# --- 3. STYLE VISUEL (VERSION FORCÉE) ---
-if logo_b64:
-    # On injecte le logo dans une div fixe qui couvre tout l'écran en arrière-plan
-    st.markdown(f"""
-        <div style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-image: url('data:image/png;base64,{logo_b64}');
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: 80%;
-            opacity: 0.04;
-            z-index: -9999;
-            pointer-events: none;
-        "></div>
-    """, unsafe_allow_html=True)
-
+# --- 2. STYLE VISUEL (FONDS NATIFS + FILIGRANE) ---
+# J'utilise une URL de secours et un filtrage CSS plus fort
 st.markdown("""
     <style>
-    /* TITRE EN ROUGE */
-    h1 { color: #FF0000 !important; font-weight: 800; }
+    /* LE LOGO EN FILIGRANE (VERSION CSS PURE) */
+    .stApp {
+        background-image: url("https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E");
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-position: center;
+        background-size: 60%;
+        /* L'astuce pour l'opacité ici sans affecter le reste */
+    }
     
-    /* FICHES BLANCHES SOLIDES SUR FOND NATIF */
+    /* COUCHE DE PROTECTION POUR L'OPACITÉ */
+    .stApp::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(240, 242, 246, 0.97); /* Fond gris natif à 97% opaque */
+        z-index: -1;
+    }
+
+    /* TES FICHES BLANCHES */
     [data-testid="stVerticalBlockBorderWrapper"] {
         background-color: white !important;
         border-radius: 15px !important;
@@ -61,7 +41,8 @@ st.markdown("""
         padding: 20px !important;
     }
 
-    /* EFFET POLAROID */
+    h1 { color: #FF0000 !important; }
+    
     [data-testid="stImage"] img { 
         border: 10px solid white !important; 
         border-radius: 5px !important; 
@@ -70,7 +51,6 @@ st.markdown("""
         height: 320px;
     }
     
-    /* BOUTONS CONTACT VERT */
     .btn-contact { 
         text-decoration: none !important; color: white !important; background-color: #2e7d32; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
@@ -92,7 +72,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. DATA ---
+# --- 3. FONCTIONS TECHNIQUES ---
 @st.cache_data(ttl=60)
 def load_all_data(url):
     try:
@@ -117,7 +97,7 @@ def format_image_url(url):
         if match: return f"https://drive.google.com/uc?export=view&id={match.group(1)}"
     return url
 
-# --- 5. INTERFACE ---
+# --- 4. INTERFACE ---
 try:
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
@@ -144,9 +124,6 @@ try:
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
         if choix_age != "Tous": df_filtre = df_filtre[df_filtre['Tranche_Age'] == choix_age]
 
-        st.write(f"**{len(df_filtre)}** protégé(s) à l'adoption")
-        st.markdown("---")
-
         for _, row in df_filtre.iterrows():
             with st.container(border=True):
                 col_img, col_txt = st.columns([1, 1.2])
@@ -171,17 +148,17 @@ try:
                         st.markdown(f'<a href="tel:0558736882" class="btn-contact">📞 Appeler le refuge</a>', unsafe_allow_html=True)
                         st.markdown(f'<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption de {row["Nom"]}" class="btn-contact">📩 Envoyer un Mail</a>', unsafe_allow_html=True)
 
-    # --- 6. PIED DE PAGE ---
+    # --- 5. PIED DE PAGE ---
     st.markdown("""
         <div class="footer-container">
-            <div style="color:#222; font-size:0.95em; line-height:1.6;">
+            <div style="color:#222; font-size:0.95em;">
                 <b style="color:#FF0000;">Refuge Médéric - Association Animaux du Grand Dax</b><br>
                 182 chemin Lucien Viau, 40990 St-Paul-lès-Dax<br>
                 📞 05 58 73 68 82 | ⏰ 14h00 - 18h00 (Mercredi au Dimanche)
             </div>
             <div style="font-size:0.85em; color:#666; margin-top:15px; padding-top:15px; border-top:1px solid #ddd;">
                 © 2026 - Application officielle du Refuge Médéric<br>
-                Développé par Firnaeth avec passion pour nos amis à quatre pattes.
+                Développé par Firnaeth.
             </div>
         </div>
     """, unsafe_allow_html=True)
