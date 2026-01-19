@@ -9,9 +9,10 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. CONFIGURATION DU LOGO ---
-# Remplace par ton ID Google Drive ou ton lien direct .png/.jpg
-ID_LOGO = "https://drive.google.com/file/d/1-xx9Lw9fbw1ILGKgWEkhXfOfrsGhTcum/view?usp=sharing"
+# --- 2. CONFIGURATION DU LOGO (A TESTER ICI) ---
+# IMPORTANT : Le lien DOIT finir par .png ou .jpg pour être sûr à 100%.
+# Si tu utilises Google Drive, utilise le format ci-dessous avec ton ID :
+ID_LOGO = "https://drive.google.com/file/d/1-xx9Lw9fbw1ILGKgWEkhXfOfrsGhTcum/view?usp=sharing" 
 URL_LOGO = f"https://drive.google.com/uc?export=view&id={ID_LOGO}"
 
 # --- 3. FONCTIONS TECHNIQUES ---
@@ -42,28 +43,34 @@ def format_image_url(url):
             return f"https://drive.google.com/uc?export=view&id={id_photo}"
     return url
 
-# --- 4. STYLE VISUEL COMPLET (LOGO BACKGROUND + CHARTE) ---
+# --- 4. STYLE VISUEL (LOGO BACKGROUND + CHARTE) ---
 st.markdown(f"""
     <style>
-    /* LOGO EN ARRIÈRE-PLAN COUPE ET TRANSPARENT */
-    .stApp::before {{
+    /* On force l'affichage du logo sur la zone principale */
+    [data-testid="stAppViewContainer"]::before {{
         content: "";
         position: fixed;
-        top: 20%; 
-        left: -15vh; /* Décale le logo à gauche pour le couper */
-        width: 60vh; 
-        height: 60vh;
+        top: 10%; 
+        left: -15vh; 
+        width: 70vh; 
+        height: 70vh;
         background-image: url("{URL_LOGO}");
         background-repeat: no-repeat;
         background-size: contain;
-        opacity: 0.35; /* Ton réglage à 35% */
-        z-index: -1;
+        background-position: left center;
+        opacity: 0.35;
+        z-index: 0;
+        pointer-events: none;
     }}
 
-    /* Titre Rouge */
+    /* On s'assure que le contenu passe devant le logo */
+    [data-testid="stVerticalBlock"] {{
+        z-index: 1;
+        position: relative;
+    }}
+
     h1 {{ color: #FF0000 !important; }}
     
-    /* Style Polaroid pour les photos d'animaux */
     [data-testid="stImage"] img {{ 
         border: 10px solid white !important; 
         border-radius: 5px !important; 
@@ -72,7 +79,6 @@ st.markdown(f"""
         height: 300px;
     }}
     
-    /* Boutons de contact en Vert (comme demandé) */
     .btn-contact {{ 
         text-decoration: none !important; color: white !important; background-color: #2e7d32; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
@@ -83,7 +89,6 @@ st.markdown(f"""
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
     }}
 
-    /* Pied de page semi-transparent pour laisser voir le logo dessous */
     .footer-container {{
         background-color: rgba(255, 255, 255, 0.8);
         padding: 25px;
@@ -106,7 +111,6 @@ try:
         st.title("🐾 Refuge Médéric")
         st.markdown("#### Association Animaux du Grand Dax")
 
-        # Filtres de recherche
         c1, c2 = st.columns(2)
         with c1:
             liste_especes = ["Tous"] + sorted(df_dispo['Espèce'].dropna().unique().tolist())
@@ -121,7 +125,6 @@ try:
 
         st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** et **stérilisés**.")
         
-        # Application des filtres
         df_filtre = df_dispo.copy()
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
         if choix_age != "Tous": df_filtre = df_filtre[df_filtre['Tranche_Age'] == choix_age]
@@ -129,7 +132,6 @@ try:
         st.write(f"**{len(df_filtre)}** protégé(s) à l'adoption")
         st.markdown("---")
 
-        # Boucle d'affichage des fiches
         for _, row in df_filtre.iterrows():
             with st.container(border=True):
                 col_img, col_txt = st.columns([1, 1.2])
@@ -142,19 +144,16 @@ try:
                     if "Urgence" in statut: st.error(f"🚨 {statut}")
                     elif "Réservé" in statut: st.warning(f"🟠 {statut}")
                     else: st.info(f"🏠 {statut}")
-                    
                     st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
                     t_hist, t_carac = st.tabs(["📖 Histoire", "📋 Caractère"])
                     with t_hist: st.write(row['Histoire'])
                     with t_carac: st.write(row['Description'])
-                    
                     if "Réservé" in statut:
                         st.markdown(f"""<div class="btn-reserve">🧡 Animal déjà réservé</div>""", unsafe_allow_html=True)
                     else:
                         st.markdown(f"""<a href="tel:0558736882" class="btn-contact">📞 Appeler le refuge</a>""", unsafe_allow_html=True)
                         st.markdown(f"""<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption de {row['Nom']}" class="btn-contact">📩 Envoyer un Mail</a>""", unsafe_allow_html=True)
 
-    # --- 6. PIED DE PAGE ---
     st.markdown("""
         <div class="footer-container">
             <div style="color:#222; font-size:0.95em; line-height:1.6;">
@@ -170,4 +169,4 @@ try:
     """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Erreur : Vérifiez la configuration de 'public_url' dans les Secrets.")
+    st.error(f"Erreur : {e}")
