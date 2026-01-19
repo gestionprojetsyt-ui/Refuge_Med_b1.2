@@ -146,7 +146,7 @@ try:
     st.markdown("""
         <div class="footer-container">
             <div style="color:#222; font-size:0.95em; line-height:1.6;">
-                <b style="color:#FF0000;">Refuge Médéric - Association Animaux du Grand Dax (Mercredi au Dimanche)</b><br>
+                <b style="color:#FF0000;">Refuge Médéric - Association Animaux du Grand Dax</b><br>
                 182 chemin Lucien Viau, 40990 St-Paul-lès-Dax<br>
                 📞 05 58 73 68 82 | ⏰ 14h00 - 18h00 (Mercredi au Dimanche)
             </div>
