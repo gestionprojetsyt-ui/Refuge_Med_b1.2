@@ -11,7 +11,7 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. CONFIGURATION DU LOGO (TON LIEN DRIVE) ---
+# --- 2. CONFIGURATION DU LOGO ---
 URL_LOGO_HD = "https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E" 
 
 @st.cache_data
@@ -27,54 +27,65 @@ def get_base64_image(url):
 
 logo_b64 = get_base64_image(URL_LOGO_HD)
 
-# --- 3. STYLE CSS (LOGO FLOTTANT, BOUTONS ET FOOTER) ---
+# --- 3. STYLE CSS AMÉLIORÉ POUR LA LISIBILITÉ ---
 if logo_b64:
     st.markdown(f"""
         <style>
-        .stApp, .stMain, [data-testid="stAppViewContainer"] {{
-            background-color: transparent !important;
+        /* Fond global */
+        .stApp {{
+            background-color: #f8f9fa; /* Un gris très clair pour reposer l'oeil */
         }}
         
-        /* IMAGE DE FOND FIXE COUPEE A GAUCHE */
+        /* Image de fond */
         .custom-bg {{
             position: fixed;
             top: 20%;
             left: -15vh;
             width: 60vh;
-            opacity: 0.35;
-            z-index: -1;
+            opacity: 0.25; /* Légèrement réduit pour moins gêner la lecture */
+            z-index: 0;
             pointer-events: none;
         }}
 
-        h1 {{ color: #FF0000 !important; font-weight: 800; }}
+        /* --- PROTECTION DE LA LISIBILITÉ --- */
+        /* On ajoute un fond blanc solide aux conteneurs des animaux */
+        [data-testid="stVerticalBlockBorderWrapper"] {{
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid #eee !important;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }}
+
+        h1 {{ color: #FF0000 !important; font-weight: 800; position: relative; z-index: 1; }}
+        h4 {{ position: relative; z-index: 1; }}
         
-        /* Style Polaroid */
         [data-testid="stImage"] img {{ 
-            border: 10px solid white !important; 
-            border-radius: 5px !important; 
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.1) !important;
-            height: 320px;
+            border: 5px solid white !important; 
+            border-radius: 10px !important; 
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1) !important;
+            height: 300px;
             object-fit: cover;
         }}
         
-        /* BOUTONS CONTACT */
         .btn-call {{ 
             text-decoration: none !important; color: white !important; background-color: #2e7d32; 
-            padding: 10px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
+            padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
         }}
         .btn-mail {{ 
             text-decoration: none !important; color: white !important; background-color: #1976d2; 
-            padding: 10px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
+            padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
         }}
         .btn-reserved {{ 
             text-decoration: none !important; color: white !important; background-color: #ff8f00; 
-            padding: 10px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
+            padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
         }}
 
-        /* FOOTER */
         .footer {{
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: white;
             padding: 25px; border-radius: 15px; margin-top: 50px; text-align: center; border: 2px solid #FF0000; color: #333;
+            position: relative; z-index: 1;
         }}
         </style>
         
@@ -124,8 +135,7 @@ try:
         with c2:
             choix_age = st.selectbox("🎂 Tranche d'âge", ["Tous", "Moins d'un an (Junior)", "1 à 5 ans (Jeune Adulte)", "5 à 10 ans (Adulte)", "10 ans et plus (Senior)"])
 
-        # BLOC INFO BLEU
-        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés** et **identifiés** (puce électronique) avant leur départ du refuge pour une adoption responsable.")
+        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ du refuge.")
         
         df_filtre = df_dispo.copy()
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
@@ -135,6 +145,7 @@ try:
         st.markdown("---")
 
         for _, row in df_filtre.iterrows():
+            # Utilisation de border=True pour activer le conteneur stylisé
             with st.container(border=True):
                 col_img, col_txt = st.columns([1, 1.2])
                 with col_img:
@@ -143,14 +154,10 @@ try:
                 with col_txt:
                     st.subheader(row['Nom'])
                     
-                    # GESTION DES COULEURS DE STATUT (COMME AVANT)
                     statut = str(row['Statut']).strip()
-                    if "Urgence" in statut:
-                        st.error(f"🚨 {statut}")
-                    elif "Réservé" in statut:
-                        st.warning(f"🟠 {statut}")
-                    else:
-                        st.info(f"🏠 {statut}")
+                    if "Urgence" in statut: st.error(f"🚨 {statut}")
+                    elif "Réservé" in statut: st.warning(f"🟠 {statut}")
+                    else: st.info(f"🏠 {statut}")
 
                     st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
                     t_hist, t_carac = st.tabs(["📖 Histoire", "📋 Caractère"])
@@ -167,7 +174,7 @@ try:
     st.markdown(f'''
         <div class="footer">
             <b>📍 Adresse :</b> 182 chemin Lucien Viau, 40990 Saint-Paul-lès-Dax<br>
-            <b>📞 Téléphone :</b> 05 58 73 68 82 | <b>⏰ Horaires :</b> 14h00 - 18h00 (Mercredi au Dimanche)<br>
+            <b>📞 Téléphone :</b> 05 58 73 68 82 | <b>⏰ Horaires :</b> 14h00 - 18h00<br>
             <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
             © 2026 - Application officielle du <b>Refuge Médéric</b><br>
             <b>Association Animaux du Grand Dax</b><br>
