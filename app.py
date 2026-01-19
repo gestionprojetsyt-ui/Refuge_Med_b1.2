@@ -38,7 +38,7 @@ st.markdown(f"""
         top: 20%;
         left: -15vh;
         width: 65vh;
-        opacity: 0.7; /* OPACITÉ RÉDUITE À 11% */
+        opacity: 0.07; /* OPACITÉ RÉDUITE À 11% */
         z-index: 0;
         pointer-events: none;
     }}
