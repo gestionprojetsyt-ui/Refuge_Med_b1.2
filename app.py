@@ -11,7 +11,7 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. CONFIGURATION DU LOGO ---
+# --- 2. LOGO ---
 URL_LOGO_HD = "https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E" 
 
 @st.cache_data
@@ -27,45 +27,45 @@ def get_base64_image(url):
 
 logo_b64 = get_base64_image(URL_LOGO_HD)
 
-# --- 3. STYLE CSS (FOND TRANSPARENT + FICHES BLANCHES OPAQUES) ---
+# --- 3. STYLE CSS "ULTRA-LISIBILITÉ" ---
 if logo_b64:
     st.markdown(f"""
         <style>
-        /* 1. On rend TOUT le fond de l'application transparent */
-        .stApp, [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {{
+        /* FOND GÉNÉRAL TRANSPARENT */
+        .stApp {{
             background-color: transparent !important;
         }}
         
-        /* 2. On place le logo derrière tout */
+        /* LOGO DE FOND */
         .custom-bg {{
             position: fixed;
             top: 25%;
             left: -15vh;
             width: 60vh;
-            opacity: 0.35;
-            z-index: -2;
+            opacity: 0.30;
+            z-index: -1;
             pointer-events: none;
         }}
 
-        /* 3. ON FORCE LE BLANC SUR LES FICHES POUR LA LISIBILITÉ */
-        [data-testid="stVerticalBlockBorderWrapper"] {{
-            background-color: white !important; /* Blanc pur pour lire sur téléphone */
+        /* --- LE BLOC BLANC OPAQUE SUR LES FICHES --- */
+        /* On cible tous les types de containers possibles dans Streamlit */
+        div[data-testid="stVerticalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] {{
+            background-color: #FFFFFF !important; /* BLANC TOTAL */
+            opacity: 1 !important; /* AUCUNE TRANSPARENCE */
             padding: 20px !important;
-            border-radius: 15px !important;
-            border: 1px solid #ddd !important;
-            box-shadow: 0px 4px 12px rgba(0,0,0,0.1) !important;
-            margin-bottom: 25px !important;
+            border-radius: 12px !important;
+            border: 2px solid #f0f0f0 !important;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.2) !important;
         }}
 
-        h1 {{ color: #FF0000 !important; font-weight: 800; text-shadow: 1px 1px 2px white; }}
-        
-        [data-testid="stImage"] img {{ 
-            border: 5px solid white !important; 
-            border-radius: 8px !important; 
-            height: 300px;
-            object-fit: cover;
+        /* Ajustement texte pour mobile */
+        h1, h2, h3, p, span, li {{
+            color: #111111 !important; /* Noir profond pour contraste max */
         }}
         
+        h1 {{ color: #FF0000 !important; font-weight: 800; }}
+
+        /* Boutons contact */
         .btn-call {{ 
             text-decoration: none !important; color: white !important; background-color: #2e7d32; 
             padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
@@ -76,7 +76,7 @@ if logo_b64:
         }}
 
         .footer {{
-            background-color: white;
+            background-color: white !important;
             padding: 20px; border-radius: 15px; margin-top: 40px; text-align: center; border: 2px solid #FF0000;
         }}
         </style>
@@ -84,7 +84,7 @@ if logo_b64:
         <img src="data:image/png;base64,{logo_b64}" class="custom-bg">
         """, unsafe_allow_html=True)
 
-# --- 4. FONCTIONS TECHNIQUES ---
+# --- 4. CHARGEMENT DONNÉES ---
 @st.cache_data(ttl=60)
 def load_all_data(url):
     try:
@@ -111,7 +111,7 @@ def format_image_url(url):
             return f"https://drive.google.com/uc?export=view&id={id_photo}"
     return url
 
-# --- 5. INTERFACE ---
+# --- 5. AFFICHAGE ---
 try:
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
@@ -127,14 +127,14 @@ try:
         with c2:
             choix_age = st.selectbox("🎂 Tranche d'âge", ["Tous", "Moins d'un an (Junior)", "1 à 5 ans (Jeune Adulte)", "5 à 10 ans (Adulte)", "10 ans et plus (Senior)"])
 
-        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ du refuge.")
+        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ.")
         
         df_filtre = df_dispo.copy()
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
         if choix_age != "Tous": df_filtre = df_filtre[df_filtre['Tranche_Age'] == choix_age]
 
         for _, row in df_filtre.iterrows():
-            # Le paramètre border=True est crucial ici pour que le CSS s'applique
+            # Border=True est indispensable pour que le bloc blanc s'applique !
             with st.container(border=True):
                 col_img, col_txt = st.columns([1, 1.2])
                 with col_img:
@@ -158,7 +158,6 @@ try:
                         st.markdown(f'<a href="tel:0558736882" class="btn-call">📞 Appeler le refuge</a>', unsafe_allow_html=True)
                         st.markdown(f'<a href="mailto:animauxdugranddax@gmail.com?subject=Demande d\'adoption pour {row["Nom"]}" class="btn-mail">📩 Envoyer un Mail</a>', unsafe_allow_html=True)
 
-    # PIED DE PAGE
     st.markdown(f'''
         <div class="footer">
             <b>📍 Adresse :</b> 182 chemin Lucien Viau, 40990 Saint-Paul-lès-Dax<br>
@@ -170,4 +169,4 @@ try:
     ''', unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Erreur de chargement des données.")
+    st.error("Données indisponibles.")
