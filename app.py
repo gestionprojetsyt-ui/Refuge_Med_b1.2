@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import re
+import requests
+import base64
 
 # --- 1. CONFIGURATION DE LA PAGE ---
 st.set_page_config(
@@ -9,70 +11,83 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. STYLE VISUEL (FONDS NATIFS + FILIGRANE) ---
-# J'utilise une URL de secours et un filtrage CSS plus fort
-st.markdown("""
-    <style>
-    /* LE LOGO EN FILIGRANE (VERSION CSS PURE) */
-    .stApp {
-        background-image: url("https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E");
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-position: center;
-        background-size: 60%;
-        /* L'astuce pour l'opacité ici sans affecter le reste */
-    }
-    
-    /* COUCHE DE PROTECTION POUR L'OPACITÉ */
-    .stApp::before {
-        content: "";
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(240, 242, 246, 0.97); /* Fond gris natif à 97% opaque */
-        z-index: -1;
-    }
+# --- 2. RÉCUPÉRATION DU LOGO ---
+URL_LOGO_HD = "https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E" 
 
-    /* TES FICHES BLANCHES */
-    [data-testid="stVerticalBlockBorderWrapper"] {
+@st.cache_data
+def get_base64_image(url):
+    try:
+        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        if response.status_code == 200:
+            return base64.b64encode(response.content).decode()
+    except:
+        return None
+    return None
+
+logo_b64 = get_base64_image(URL_LOGO_HD)
+
+# --- 3. STYLE VISUEL (COUCHES SUPERPOSÉES) ---
+st.markdown(f"""
+    <style>
+    /* 1. ON REND LE FOND NATIF DE L'APPLI TRANSPARENT POUR VOIR LE LOGO */
+    .stApp {{
+        background-color: transparent !important;
+    }}
+
+    /* 2. ON PLACE LE LOGO SUR UNE COUCHE FIXE DERRIÈRE LES ÉLÉMENTS */
+    .logo-overlay {{
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 70vw;
+        opacity: 0.04; /* Ajusté à 4% pour être visible mais discret */
+        z-index: -1; /* Au-dessus du fond, mais sous le texte/fiches */
+        pointer-events: none;
+    }}
+
+    /* 3. STYLE DES FICHES BLANCHES (POUR BIEN SE DÉTACHER) */
+    [data-testid="stVerticalBlockBorderWrapper"] {{
         background-color: white !important;
         border-radius: 15px !important;
         border: 1px solid #ddd !important;
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.1) !important;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.08) !important;
         padding: 20px !important;
-    }
+        margin-bottom: 20px !important;
+    }}
 
-    h1 { color: #FF0000 !important; }
-    
-    [data-testid="stImage"] img { 
-        border: 10px solid white !important; 
-        border-radius: 5px !important; 
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.2) !important;
-        object-fit: cover;
-        height: 320px;
-    }
-    
-    .btn-contact { 
+    /* BOUTONS ET TITRES */
+    h1 {{ color: #FF0000 !important; font-weight: 800; }}
+    .btn-contact {{ 
         text-decoration: none !important; color: white !important; background-color: #2e7d32; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
-    }
-    
-    .btn-reserve { 
+    }}
+    .btn-reserve {{ 
         text-decoration: none !important; color: white !important; background-color: #ff8f00; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
-    }
+    }}
 
-    .footer-container {
+    [data-testid="stImage"] img {{ 
+        border: 8px solid white !important; 
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.2) !important;
+        height: 320px;
+        object-fit: cover;
+    }}
+
+    .footer-container {{
         background-color: white;
         padding: 25px;
         border-radius: 15px;
         margin-top: 50px;
         text-align: center;
         border: 2px solid #FF0000;
-    }
+    }}
     </style>
+    
+    <img src="data:image/png;base64,{logo_b64 if logo_b64 else ''}" class="logo-overlay">
     """, unsafe_allow_html=True)
 
-# --- 3. FONCTIONS TECHNIQUES ---
+# --- 4. DATA ---
 @st.cache_data(ttl=60)
 def load_all_data(url):
     try:
@@ -97,7 +112,7 @@ def format_image_url(url):
         if match: return f"https://drive.google.com/uc?export=view&id={match.group(1)}"
     return url
 
-# --- 4. INTERFACE ---
+# --- 5. INTERFACE ---
 try:
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
@@ -124,6 +139,8 @@ try:
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
         if choix_age != "Tous": df_filtre = df_filtre[df_filtre['Tranche_Age'] == choix_age]
 
+        st.write(f"**{len(df_filtre)}** protégé(s) à l'adoption")
+
         for _, row in df_filtre.iterrows():
             with st.container(border=True):
                 col_img, col_txt = st.columns([1, 1.2])
@@ -148,7 +165,7 @@ try:
                         st.markdown(f'<a href="tel:0558736882" class="btn-contact">📞 Appeler le refuge</a>', unsafe_allow_html=True)
                         st.markdown(f'<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption de {row["Nom"]}" class="btn-contact">📩 Envoyer un Mail</a>', unsafe_allow_html=True)
 
-    # --- 5. PIED DE PAGE ---
+    # --- 6. PIED DE PAGE ---
     st.markdown("""
         <div class="footer-container">
             <div style="color:#222; font-size:0.95em;">
@@ -164,4 +181,4 @@ try:
     """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Erreur.")
+    st.error("Erreur de chargement.")
