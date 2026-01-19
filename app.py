@@ -9,27 +9,33 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. CONFIGURATION DU LOGO ---
-# Remplace cette URL par ton lien final une fois que ça marche
+# --- 2. CONFIGURATION DU LOGO (A REMPLACER PAR TON LIEN) ---
+# J'utilise une image de patte de chien par défaut pour le test
 URL_LOGO = "https://cdn-icons-png.flaticon.com/512/620/620851.png" 
 
-# --- 3. STYLE VISUEL (NOUVELLE MÉTHODE) ---
+# --- 3. STYLE CSS (FORCE LE LOGO EN VRAI BACKGROUND) ---
 st.markdown(f"""
     <style>
-    /* LE LOGO FIXE A GAUCHE */
+    /* LE LOGO : Position fixed pour sortir de tout container */
     .background-logo {{
         position: fixed;
-        top: 15%;
-        left: -150px; /* On le sort de 150px pour le couper */
-        width: 450px;
-        opacity: 0.25; /* 25% pour être sûr qu'on peut lire le texte par dessus */
-        z-index: -1; /* Passe derrière tout */
+        top: 15vh;
+        left: -180px; /* Coupe environ la moitié à 35% de largeur */
+        width: 500px;
+        opacity: 0.35; /* Ton réglage à 35% */
+        z-index: -1; /* Passe derrière absolument TOUT */
         pointer-events: none;
+        user-select: none;
     }}
 
-    /* On s'assure que le fond de l'app est transparent pour voir le logo */
+    /* On force le fond de l'application à être transparent pour voir l'image derrière */
     .stApp {{
-        background-color: white;
+        background: transparent;
+    }}
+
+    /* On s'assure que le contenu reste lisible */
+    .stMain {{
+        background-color: rgba(255, 255, 255, 0.4); /* Voile très léger pour le contraste */
     }}
 
     h1 {{ color: #FF0000 !important; }}
@@ -48,14 +54,13 @@ st.markdown(f"""
     }}
 
     .footer-container {{
-        background-color: rgba(255, 255, 255, 0.9);
+        background-color: white;
         padding: 25px;
         border-radius: 15px;
         margin-top: 50px;
         text-align: center;
         border: 2px solid #FF0000;
-        position: relative;
-        z-index: 10;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.05);
     }}
     </style>
     
@@ -89,7 +94,7 @@ def format_image_url(url):
             return f"https://drive.google.com/uc?export=view&id={id_photo}"
     return url
 
-# --- 5. LOGIQUE D'AFFICHAGE ---
+# --- 5. CONTENU DE L'APP ---
 try:
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
