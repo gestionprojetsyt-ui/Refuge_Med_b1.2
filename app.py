@@ -11,7 +11,7 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. FONCTION POUR LE LOGO EN FOND ---
+# --- 2. RÉCUPÉRATION DU LOGO ---
 URL_LOGO_HD = "https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E" 
 
 @st.cache_data
@@ -21,16 +21,16 @@ def get_base64_image(url):
         response = requests.get(url, headers=headers, timeout=15)
         if response.status_code == 200:
             return base64.b64encode(response.content).decode()
-        return None
     except:
         return None
+    return None
 
 logo_b64 = get_base64_image(URL_LOGO_HD)
 
-# --- 3. STYLE VISUEL (TON CODE AVEC LOGO AJOUTÉ) ---
+# --- 3. STYLE VISUEL (LOGO EN COUCHE INFÉRIEURE + FOND NATIF) ---
 st.markdown(f"""
     <style>
-    /* LE LOGO EN FOND À 0.03 */
+    /* LE LOGO EN COUCHE EN DESSOUS (Z-INDEX: -1) */
     .logo-bg {{
         position: fixed;
         top: 50%;
@@ -41,10 +41,11 @@ st.markdown(f"""
         z-index: -1;
         pointer-events: none;
     }}
-
-    /* TES STYLES DE RÉFÉRENCE */
-    h1 {{ color: #FF0000 !important; }}
     
+    /* TITRE EN ROUGE */
+    h1 {{ color: #FF0000 !important; font-weight: 800; }}
+    
+    /* EFFET POLAROID SUR LES PHOTOS */
     [data-testid="stImage"] img {{ 
         border: 10px solid white !important; 
         border-radius: 5px !important; 
@@ -53,6 +54,7 @@ st.markdown(f"""
         height: 320px;
     }}
     
+    /* BOUTONS CONTACT VERT */
     .btn-contact {{ 
         text-decoration: none !important; color: white !important; background-color: #2e7d32; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
@@ -63,6 +65,7 @@ st.markdown(f"""
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
     }}
 
+    /* PIED DE PAGE AVEC CADRE ROUGE */
     .footer-container {{
         background-color: white;
         padding: 25px;
@@ -76,13 +79,12 @@ st.markdown(f"""
     <img src="data:image/png;base64,{logo_b64 if logo_b64 else ''}" class="logo-bg">
     """, unsafe_allow_html=True)
 
-# --- 4. FONCTIONS TECHNIQUES ---
+# --- 4. DATA ---
 @st.cache_data(ttl=60)
 def load_all_data(url):
     try:
         csv_url = url.replace('/edit?usp=sharing', '/export?format=csv').replace('/edit#gid=', '/export?format=csv&gid=')
         df = pd.read_csv(csv_url, engine='c', low_memory=False)
-        
         def categoriser_age(age):
             try:
                 age = float(str(age).replace(',', '.'))
@@ -91,7 +93,6 @@ def load_all_data(url):
                 elif 5 < age < 10: return "5 à 10 ans (Adulte)"
                 else: return "10 ans et plus (Senior)"
             except: return "Non précisé"
-                
         df['Tranche_Age'] = df['Âge'].apply(categoriser_age)
         return df
     except: return pd.DataFrame()
@@ -103,7 +104,7 @@ def format_image_url(url):
         if match: return f"https://drive.google.com/uc?export=view&id={match.group(1)}"
     return url
 
-# --- 5. INTERFACE ET CHARGEMENT ---
+# --- 5. INTERFACE ---
 try:
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
@@ -116,17 +117,15 @@ try:
 
         c1, c2 = st.columns(2)
         with c1:
-            liste_especes = ["Tous"] + sorted(df_dispo['Espèce'].dropna().unique().tolist())
-            choix_espece = st.selectbox("🐶 Espèce", liste_especes)
+            choix_espece = st.selectbox("🐶 Espèce", ["Tous"] + sorted(df_dispo['Espèce'].dropna().unique().tolist()))
         with c2:
-            liste_ages = ["Tous", "Moins d'un an (Junior)", "1 à 5 ans (Jeune Adulte)", "5 à 10 ans (Adulte)", "10 ans et plus (Senior)"]
-            choix_age = st.selectbox("🎂 Tranche d'âge", liste_ages)
-            
+            choix_age = st.selectbox("🎂 Tranche d'âge", ["Tous", "Moins d'un an (Junior)", "1 à 5 ans (Jeune Adulte)", "5 à 10 ans (Adulte)", "10 ans et plus (Senior)"])
+
         if st.button("🔄 Actualiser le catalogue"):
             st.cache_data.clear()
             st.rerun()
 
-        # Mention de santé complète avec stérilisation
+        # Engagement Santé complet
         st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ du refuge pour une adoption responsable.")
         
         df_filtre = df_dispo.copy()
@@ -137,7 +136,7 @@ try:
         st.markdown("---")
 
         for _, row in df_filtre.iterrows():
-            with st.container(border=True):
+            with st.container(border=True): # Fiches blanches au dessus du logo
                 col_img, col_txt = st.columns([1, 1.2])
                 with col_img:
                     url_photo = format_image_url(row['Photo'])
@@ -150,9 +149,9 @@ try:
                     else: st.info(f"🏠 {statut}")
 
                     st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
-                    t_hist, t_carac = st.tabs(["📖 Histoire", "📋 Caractère"])
-                    with t_hist: st.write(row['Histoire'])
-                    with t_carac: st.write(row['Description'])
+                    t1, t2 = st.tabs(["📖 Histoire", "📋 Caractère"])
+                    with t1: st.write(row['Histoire'])
+                    with t2: st.write(row['Description'])
                     
                     if "Réservé" in statut:
                         st.markdown(f'<div class="btn-reserve">🧡 Animal déjà réservé</div>', unsafe_allow_html=True)
@@ -176,4 +175,4 @@ try:
     """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Erreur de configuration.")
+    st.error("Erreur de connexion aux données.")
