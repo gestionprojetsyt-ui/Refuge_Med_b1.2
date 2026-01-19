@@ -11,7 +11,7 @@ st.set_page_config(
 
 # --- 2. CONFIGURATION DU LOGO ---
 # Remplace par ton ID Google Drive ou ton lien direct .png/.jpg
-ID_LOGO = https://drive.google.com/file/d/1-xx9Lw9fbw1ILGKgWEkhXfOfrsGhTcum/view?usp=sharing
+ID_LOGO = "https://drive.google.com/file/d/1-xx9Lw9fbw1ILGKgWEkhXfOfrsGhTcum/view?usp=sharing"
 URL_LOGO = f"https://drive.google.com/uc?export=view&id={ID_LOGO}"
 
 # --- 3. FONCTIONS TECHNIQUES ---
