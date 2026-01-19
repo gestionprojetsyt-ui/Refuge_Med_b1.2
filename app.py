@@ -27,45 +27,47 @@ def get_base64_image(url):
 
 logo_b64 = get_base64_image(URL_LOGO_HD)
 
-# --- 3. STYLE CSS "ULTRA-LISIBILITÉ" ---
+# --- 3. STYLE CSS (CONTRASTE FORCE) ---
 if logo_b64:
     st.markdown(f"""
         <style>
-        /* FOND GÉNÉRAL TRANSPARENT */
+        /* On force le fond de l'appli en très clair pour le contraste */
         .stApp {{
-            background-color: transparent !important;
+            background-color: #F0F2F6 !important;
         }}
         
-        /* LOGO DE FOND */
+        /* Logo de fond */
         .custom-bg {{
             position: fixed;
             top: 25%;
             left: -15vh;
             width: 60vh;
             opacity: 0.30;
-            z-index: -1;
+            z-index: 0;
             pointer-events: none;
         }}
 
-        /* --- LE BLOC BLANC OPAQUE SUR LES FICHES --- */
-        /* On cible tous les types de containers possibles dans Streamlit */
-        div[data-testid="stVerticalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] {{
-            background-color: #FFFFFF !important; /* BLANC TOTAL */
-            opacity: 1 !important; /* AUCUNE TRANSPARENCE */
-            padding: 20px !important;
-            border-radius: 12px !important;
-            border: 2px solid #f0f0f0 !important;
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.2) !important;
+        /* STYLE DES FICHES : FOND BLANC ET TEXTE NOIR FORCE */
+        .fiche-animal {{
+            background-color: white !important;
+            color: #1A1A1A !important;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #E0E0E0;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 10;
         }}
 
-        /* Ajustement texte pour mobile */
-        h1, h2, h3, p, span, li {{
-            color: #111111 !important; /* Noir profond pour contraste max */
+        /* On force la couleur noire sur TOUT le texte dans les fiches */
+        .fiche-animal p, .fiche-animal span, .fiche-animal h3, .fiche-animal div {{
+            color: #1A1A1A !important;
         }}
-        
+
         h1 {{ color: #FF0000 !important; font-weight: 800; }}
-
-        /* Boutons contact */
+        
+        /* Boutons */
         .btn-call {{ 
             text-decoration: none !important; color: white !important; background-color: #2e7d32; 
             padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
@@ -76,15 +78,14 @@ if logo_b64:
         }}
 
         .footer {{
-            background-color: white !important;
-            padding: 20px; border-radius: 15px; margin-top: 40px; text-align: center; border: 2px solid #FF0000;
+            background-color: white; padding: 20px; border-radius: 15px; margin-top: 40px; text-align: center; border: 2px solid #FF0000; color: #1A1A1A;
         }}
         </style>
         
         <img src="data:image/png;base64,{logo_b64}" class="custom-bg">
         """, unsafe_allow_html=True)
 
-# --- 4. CHARGEMENT DONNÉES ---
+# --- 4. FONCTIONS ---
 @st.cache_data(ttl=60)
 def load_all_data(url):
     try:
@@ -93,10 +94,10 @@ def load_all_data(url):
         def categoriser_age(age):
             try:
                 age = float(str(age).replace(',', '.'))
-                if age < 1: return "Moins d'un an (Junior)"
-                elif 1 <= age <= 5: return "1 à 5 ans (Jeune Adulte)"
-                elif 5 < age < 10: return "5 à 10 ans (Adulte)"
-                else: return "10 ans et plus (Senior)"
+                if age < 1: return "Moins d'un an"
+                elif 1 <= age <= 5: return "1 à 5 ans"
+                elif 5 < age < 10: return "5 à 10 ans"
+                else: return "10 ans et plus"
             except: return "Non précisé"
         df['Tranche_Age'] = df['Âge'].apply(categoriser_age)
         return df
@@ -111,7 +112,7 @@ def format_image_url(url):
             return f"https://drive.google.com/uc?export=view&id={id_photo}"
     return url
 
-# --- 5. AFFICHAGE ---
+# --- 5. INTERFACE ---
 try:
     URL_SHEET = st.secrets["gsheets"]["public_url"]
     df = load_all_data(URL_SHEET)
@@ -119,54 +120,55 @@ try:
     if not df.empty:
         df_dispo = df[df['Statut'] != "Adopté"].copy()
         st.title("🐾 Refuge Médéric")
-        st.markdown("#### Association Animaux du Grand Dax")
+        st.write("Association Animaux du Grand Dax")
 
-        c1, c2 = st.columns(2)
-        with c1:
-            choix_espece = st.selectbox("🐶 Espèce", ["Tous"] + sorted(df_dispo['Espèce'].dropna().unique().tolist()))
-        with c2:
-            choix_age = st.selectbox("🎂 Tranche d'âge", ["Tous", "Moins d'un an (Junior)", "1 à 5 ans (Jeune Adulte)", "5 à 10 ans (Adulte)", "10 ans et plus (Senior)"])
-
-        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ.")
+        # Filtres simples
+        choix_espece = st.selectbox("🐶 Espèce", ["Tous"] + sorted(df_dispo['Espèce'].dropna().unique().tolist()))
+        
+        st.info("🛡️ **Engagement Santé :** Vaccinés, identifiés et stérilisés.")
         
         df_filtre = df_dispo.copy()
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
-        if choix_age != "Tous": df_filtre = df_filtre[df_filtre['Tranche_Age'] == choix_age]
 
         for _, row in df_filtre.iterrows():
-            # Border=True est indispensable pour que le bloc blanc s'applique !
-            with st.container(border=True):
-                col_img, col_txt = st.columns([1, 1.2])
-                with col_img:
-                    url_photo = format_image_url(row['Photo'])
-                    st.image(url_photo if url_photo.startswith('http') else "https://via.placeholder.com/300", use_container_width=True)
-                with col_txt:
-                    st.subheader(row['Nom'])
-                    statut = str(row['Statut']).strip()
-                    if "Urgence" in statut: st.error(f"🚨 {statut}")
-                    elif "Réservé" in statut: st.warning(f"🟠 {statut}")
-                    else: st.info(f"🏠 {statut}")
+            # ON EMBALLE CHAQUE FICHE DANS NOTRE CLASSE CSS PERSONNALISÉE
+            st.markdown(f'<div class="fiche-animal">', unsafe_allow_html=True)
+            
+            col_img, col_txt = st.columns([1, 1.2])
+            with col_img:
+                url_photo = format_image_url(row['Photo'])
+                st.image(url_photo if url_photo.startswith('http') else "https://via.placeholder.com/300", use_container_width=True)
+            
+            with col_txt:
+                st.subheader(row['Nom'])
+                st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
+                
+                # Statut
+                statut = str(row['Statut']).strip()
+                if "Urgence" in statut: st.error(statut)
+                elif "Réservé" in statut: st.warning(statut)
+                else: st.info(statut)
+                
+                # Histoire et Caractère simplifiés pour mobile
+                with st.expander("Voir son histoire"):
+                    st.write(row['Histoire'])
+                
+                if "Réservé" in statut:
+                    st.markdown('<div style="background-color:#ff8f00; color:white; padding:10px; border-radius:8px; text-align:center;">Réservé</div>', unsafe_allow_html=True)
+                else:
+                    st.markdown(f'<a href="tel:0558736882" class="btn-call">📞 Appeler</a>', unsafe_allow_html=True)
+                    st.markdown(f'<a href="mailto:animauxdugranddax@gmail.com?subject=Adoption {row["Nom"]}" class="btn-mail">📩 Mail</a>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
-                    st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
-                    t_hist, t_carac = st.tabs(["📖 Histoire", "📋 Caractère"])
-                    with t_hist: st.write(row['Histoire'])
-                    with t_carac: st.write(row['Description'])
-                    
-                    if "Réservé" in statut:
-                        st.markdown('<div style="background-color:#ff8f00; color:white; padding:10px; border-radius:8px; text-align:center; font-weight:bold;">Animal déjà réservé</div>', unsafe_allow_html=True)
-                    else:
-                        st.markdown(f'<a href="tel:0558736882" class="btn-call">📞 Appeler le refuge</a>', unsafe_allow_html=True)
-                        st.markdown(f'<a href="mailto:animauxdugranddax@gmail.com?subject=Demande d\'adoption pour {row["Nom"]}" class="btn-mail">📩 Envoyer un Mail</a>', unsafe_allow_html=True)
-
+    # PIED DE PAGE
     st.markdown(f'''
         <div class="footer">
-            <b>📍 Adresse :</b> 182 chemin Lucien Viau, 40990 Saint-Paul-lès-Dax<br>
-            <b>📞 Téléphone :</b> 05 58 73 68 82 | <b>⏰ Horaires :</b> 14h00 - 18h00<br>
-            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-            © 2026 - Application officielle du <b>Refuge Médéric</b><br>
-            Développé par <i>Firnaeth.</i> avec passion pour nos amis à quatre pattes
+            <b>📍 Adresse :</b> 182 chemin Lucien Viau, Saint-Paul-lès-Dax<br>
+            <b>📞 Tél :</b> 05 58 73 68 82<br>
+            © 2026 - Développé par Firnaeth.
         </div>
     ''', unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Données indisponibles.")
+    st.error("Erreur de données.")
