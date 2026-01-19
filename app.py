@@ -11,7 +11,7 @@ st.set_page_config(
     page_icon="🐾"
 )
 
-# --- 2. CONFIGURATION DU LOGO (TON LIEN DRIVE) ---
+# --- 2. CONFIGURATION DU LOGO ---
 URL_LOGO_HD = "https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E" 
 
 @st.cache_data
@@ -27,37 +27,43 @@ def get_base64_image(url):
 
 logo_b64 = get_base64_image(URL_LOGO_HD)
 
-# --- 3. STYLE CSS (LOGO FLOTTANT, BOUTONS ET FOOTER) ---
+# --- 3. STYLE CSS (LOGO FLOTTANT + FICHES BLANCHES) ---
 if logo_b64:
     st.markdown(f"""
         <style>
         .stApp, .stMain, [data-testid="stAppViewContainer"] {{
-            background-color: transparent !important;
+            background-color: #F5F7F9 !important; /* Gris très clair pour le fond */
         }}
         
-        /* IMAGE DE FOND FIXE COUPEE A GAUCHE */
         .custom-bg {{
             position: fixed;
             top: 20%;
             left: -15vh;
             width: 60vh;
-            opacity: 0.35;
+            opacity: 0.25;
             z-index: -1;
             pointer-events: none;
         }}
 
         h1 {{ color: #FF0000 !important; font-weight: 800; }}
         
-        /* Style Polaroid */
-        [data-testid="stImage"] img {{ 
-            border: 10px solid white !important; 
-            border-radius: 5px !important; 
+        /* --- CORRECTION LISIBILITÉ MOBILE --- */
+        /* On force le fond blanc sur les fiches des animaux */
+        [data-testid="stVerticalBlockBorderWrapper"] {{
+            background-color: white !important;
+            padding: 20px !important;
+            border-radius: 15px !important;
+            border: 1px solid #ddd !important;
             box-shadow: 0px 4px 15px rgba(0,0,0,0.1) !important;
+        }}
+
+        [data-testid="stImage"] img {{ 
+            border: 5px solid white !important; 
+            border-radius: 5px !important; 
             height: 320px;
             object-fit: cover;
         }}
         
-        /* BOUTONS CONTACT */
         .btn-call {{ 
             text-decoration: none !important; color: white !important; background-color: #2e7d32; 
             padding: 10px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
@@ -71,9 +77,8 @@ if logo_b64:
             padding: 10px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
         }}
 
-        /* FOOTER */
         .footer {{
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: white;
             padding: 25px; border-radius: 15px; margin-top: 50px; text-align: center; border: 2px solid #FF0000; color: #333;
         }}
         </style>
@@ -124,33 +129,24 @@ try:
         with c2:
             choix_age = st.selectbox("🎂 Tranche d'âge", ["Tous", "Moins d'un an (Junior)", "1 à 5 ans (Jeune Adulte)", "5 à 10 ans (Adulte)", "10 ans et plus (Senior)"])
 
-        # BLOC INFO BLEU
-        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ du refuge pour une adoption responsable.")
+        st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés**.")
         
         df_filtre = df_dispo.copy()
         if choix_espece != "Tous": df_filtre = df_filtre[df_filtre['Espèce'] == choix_espece]
         if choix_age != "Tous": df_filtre = df_filtre[df_filtre['Tranche_Age'] == choix_age]
 
-        st.write(f"**{len(df_filtre)}** protégé(s) à l'adoption")
-        st.markdown("---")
-
         for _, row in df_filtre.iterrows():
-            with st.container(border=True):
+            with st.container(border=True): # Ce container devient blanc grâce au CSS
                 col_img, col_txt = st.columns([1, 1.2])
                 with col_img:
                     url_photo = format_image_url(row['Photo'])
                     st.image(url_photo if url_photo.startswith('http') else "https://via.placeholder.com/300", use_container_width=True)
                 with col_txt:
                     st.subheader(row['Nom'])
-                    
-                    # GESTION DES COULEURS DE STATUT (COMME AVANT)
                     statut = str(row['Statut']).strip()
-                    if "Urgence" in statut:
-                        st.error(f"🚨 {statut}")
-                    elif "Réservé" in statut:
-                        st.warning(f"🟠 {statut}")
-                    else:
-                        st.info(f"🏠 {statut}")
+                    if "Urgence" in statut: st.error(f"🚨 {statut}")
+                    elif "Réservé" in statut: st.warning(f"🟠 {statut}")
+                    else: st.info(f"🏠 {statut}")
 
                     st.write(f"**{row['Espèce']}** | {row['Sexe']} | **{row['Âge']} ans**")
                     t_hist, t_carac = st.tabs(["📖 Histoire", "📋 Caractère"])
