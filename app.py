@@ -17,8 +17,8 @@ URL_LOGO_HD = "https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-Eo
 @st.cache_data
 def get_base64_image(url):
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=15)
+        # On ajoute un timeout et un header pour éviter les blocages
+        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         if response.status_code == 200:
             return base64.b64encode(response.content).decode()
     except:
@@ -27,56 +27,69 @@ def get_base64_image(url):
 
 logo_b64 = get_base64_image(URL_LOGO_HD)
 
-# --- 3. STYLE VISUEL (LOGO EN COUCHE INFÉRIEURE + FOND NATIF) ---
-st.markdown(f"""
+# --- 3. STYLE VISUEL (VERSION FORCÉE) ---
+if logo_b64:
+    # On injecte le logo dans une div fixe qui couvre tout l'écran en arrière-plan
+    st.markdown(f"""
+        <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('data:image/png;base64,{logo_b64}');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 80%;
+            opacity: 0.04;
+            z-index: -9999;
+            pointer-events: none;
+        "></div>
+    """, unsafe_allow_html=True)
+
+st.markdown("""
     <style>
-    /* LE LOGO EN COUCHE EN DESSOUS (Z-INDEX: -1) */
-    .logo-bg {{
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 80vw;
-        opacity: 0.03;
-        z-index: -1;
-        pointer-events: none;
-    }}
-    
     /* TITRE EN ROUGE */
-    h1 {{ color: #FF0000 !important; font-weight: 800; }}
+    h1 { color: #FF0000 !important; font-weight: 800; }
     
-    /* EFFET POLAROID SUR LES PHOTOS */
-    [data-testid="stImage"] img {{ 
+    /* FICHES BLANCHES SOLIDES SUR FOND NATIF */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: white !important;
+        border-radius: 15px !important;
+        border: 1px solid #ddd !important;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.1) !important;
+        padding: 20px !important;
+    }
+
+    /* EFFET POLAROID */
+    [data-testid="stImage"] img { 
         border: 10px solid white !important; 
         border-radius: 5px !important; 
         box-shadow: 0px 4px 12px rgba(0,0,0,0.2) !important;
         object-fit: cover;
         height: 320px;
-    }}
+    }
     
     /* BOUTONS CONTACT VERT */
-    .btn-contact {{ 
+    .btn-contact { 
         text-decoration: none !important; color: white !important; background-color: #2e7d32; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
-    }}
+    }
     
-    .btn-reserve {{ 
+    .btn-reserve { 
         text-decoration: none !important; color: white !important; background-color: #ff8f00; 
         padding: 12px; border-radius: 8px; display: block; text-align: center; font-weight: bold; margin-top: 10px;
-    }}
+    }
 
-    /* PIED DE PAGE AVEC CADRE ROUGE */
-    .footer-container {{
+    .footer-container {
         background-color: white;
         padding: 25px;
         border-radius: 15px;
         margin-top: 50px;
         text-align: center;
         border: 2px solid #FF0000;
-    }}
+    }
     </style>
-    
-    <img src="data:image/png;base64,{logo_b64 if logo_b64 else ''}" class="logo-bg">
     """, unsafe_allow_html=True)
 
 # --- 4. DATA ---
@@ -125,7 +138,6 @@ try:
             st.cache_data.clear()
             st.rerun()
 
-        # Engagement Santé complet
         st.info("🛡️ **Engagement Santé :** Tous nos protégés sont **vaccinés**, **identifiés** (puce électronique) et **stérilisés** avant leur départ du refuge pour une adoption responsable.")
         
         df_filtre = df_dispo.copy()
@@ -136,7 +148,7 @@ try:
         st.markdown("---")
 
         for _, row in df_filtre.iterrows():
-            with st.container(border=True): # Fiches blanches au dessus du logo
+            with st.container(border=True):
                 col_img, col_txt = st.columns([1, 1.2])
                 with col_img:
                     url_photo = format_image_url(row['Photo'])
@@ -175,4 +187,4 @@ try:
     """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error("Erreur de connexion aux données.")
+    st.error("Erreur.")
