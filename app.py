@@ -5,10 +5,13 @@ import requests
 import base64
 
 # --- 1. CONFIGURATION DE LA PAGE ---
+# On remplace l'icône "🐾" par l'URL de ton logo pour l'onglet du navigateur
+URL_LOGO_HD = "https://drive.google.com/uc?export=view&id=1M8yTjY6tt5YZhPvixn-EoFIiolwXRn7E"
+
 st.set_page_config(
     page_title="Refuge Médéric - Association Animaux du Grand Dax", 
     layout="centered", 
-    page_icon="🐾"
+    page_icon=URL_LOGO_HD  # <-- Le logo s'affiche maintenant dans l'onglet !
 )
 
 # --- 2. RÉCUPÉRATION DU LOGO ---
